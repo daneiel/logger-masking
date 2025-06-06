@@ -27,6 +27,7 @@ Uma biblioteca Java leve, poderosa e "plug-and-play" para mascarar dados sensív
 ```
 
 ## 2. Exemplo de implementacao
+### Padrao
 ```java
 public class User {
 @Mask(strategy = MaskingStrategy.KEEP_LAST_4)
@@ -35,4 +36,25 @@ private String creditCard = "1234-5678-9012-3456";
 
 User user = new User();
 String masked = MaskingEngine.mask(user); // User{creditCard=****************3456}
+```
+
+### Customizado
+```java
+public static class ReverseMask implements CustomMaskingStrategy {
+    public ReverseMask() {} // Construtor válido
+    @Override
+    public String mask(String value) {
+        return new StringBuilder(value).reverse().toString();
+    }
+}
+
+private record CustomData(
+        @Mask(strategy = MaskingStrategy.CUSTOM, customStrategy = ReverseMask.class)
+        String customField
+) {}
+
+String data = new CustomData("ABC-123");
+
+// Act
+String result = MaskingEngine.mask(data); // CustomData{customField=321-CBA}
 ```

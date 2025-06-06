@@ -49,7 +49,7 @@ class MaskingEngineTest {
                     () -> assertTrue(result.contains("keepFirst4=1234******")),
                     () -> assertTrue(result.contains("email=j******e@example.com")),
                     () -> assertTrue(result.contains("cpf=***.456.789-**")),
-                    () -> assertTrue(result.contains("cnpj=**.345.678/****-**")) // Corrigido para corresponder à implementação
+                    () -> assertTrue(result.contains("cnpj=**.345.678/****-**"))
             );
         }
     }
@@ -59,7 +59,8 @@ class MaskingEngineTest {
     class CustomStrategy {
 
         // Uma implementação de estratégia customizada para o teste
-        private static class ReverseMask implements CustomMaskingStrategy {
+        public static class ReverseMask implements CustomMaskingStrategy {
+            public ReverseMask() {} // Construtor válido
             @Override
             public String mask(String value) {
                 return new StringBuilder(value).reverse().toString();
@@ -92,9 +93,35 @@ class MaskingEngineTest {
             var data = new BadData("test");
 
             // Act & Assert
-            assertThrows(IllegalArgumentException.class, () -> {
+            assertThrows(IllegalArgumentException.class, () -> MaskingEngine.mask(data));
+        }
+
+        // --- NOVO TESTE ADICIONADO ---
+        @Test
+        @DisplayName("Deve lançar MaskingException se a classe customizada não tiver um construtor público sem argumentos")
+        void shouldThrowExceptionWhenCustomStrategyHasNoPublicNoArgConstructor() {
+            // Arrange: Esta classe de estratégia só tem um construtor que aceita um argumento.
+            class StrategyWithArgsConstructor implements CustomMaskingStrategy {
+                public StrategyWithArgsConstructor(String prefix) {}
+                @Override
+                public String mask(String value) { return "masked"; }
+            }
+
+            // O record usa a estratégia mal configurada.
+            record DataWithBadStrategy(
+                    @Mask(strategy = MaskingStrategy.CUSTOM, customStrategy = StrategyWithArgsConstructor.class)
+                    String field
+            ) {}
+
+            var data = new DataWithBadStrategy("test");
+
+            // Act & Assert: Verifica se a nossa MaskingException é lançada.
+            var exception = assertThrows(MaskingEngine.MaskingException.class, () -> {
                 MaskingEngine.mask(data);
             });
+
+            // Opcional, mas bom: verifica se a causa raiz foi a exceção de reflexão esperada.
+            assertEquals(NoSuchMethodException.class, exception.getCause().getClass());
         }
     }
 }
