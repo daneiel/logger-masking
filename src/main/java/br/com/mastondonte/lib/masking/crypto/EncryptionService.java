@@ -1,5 +1,7 @@
 package br.com.mastondonte.lib.masking.crypto;
 
+import br.com.mastondonte.lib.masking.exceptions.CryptoException;
+
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
@@ -35,24 +37,26 @@ public final class EncryptionService {
     public String decrypt(String base64CipherText, SecretKey key) {
         try {
             byte[] cipherTextWithIv = Base64.getDecoder().decode(base64CipherText);
+
+            // ... (resto da sua lógica de descriptografia)
             ByteBuffer byteBuffer = ByteBuffer.wrap(cipherTextWithIv);
             byte[] iv = new byte[IV_LENGTH_BYTES];
             byteBuffer.get(iv);
             byte[] cipherText = new byte[byteBuffer.remaining()];
             byteBuffer.get(cipherText);
+
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             GCMParameterSpec parameterSpec = new GCMParameterSpec(TAG_LENGTH_BIT, iv);
             cipher.init(Cipher.DECRYPT_MODE, key, parameterSpec);
+
             byte[] plainTextBytes = cipher.doFinal(cipherText);
             return new String(plainTextBytes, StandardCharsets.UTF_8);
-        } catch (GeneralSecurityException e) {
-            throw new CryptoException("Failed to decrypt data", e);
+
+            // ✅ A LINHA ABAIXO É A CORREÇÃO ✅
+        } catch (IllegalArgumentException | GeneralSecurityException e) {
+            throw new CryptoException("Failed to decrypt data. Check if the key is correct or if the data has been tampered with or is malformed.", e);
         }
     }
 
-    public static class CryptoException extends RuntimeException {
-        public CryptoException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
+
 }
