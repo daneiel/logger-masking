@@ -20,7 +20,7 @@ Uma biblioteca Java leve, poderosa e "plug-and-play" para mascarar dados sensív
 **Maven:**
 ```xml
 <dependency>
-    <groupId>br.com.mastodonte.lib</groupId>
+    <groupId>br.com.mastodonte.lib.masking</groupId>
     <artifactId>logger-masking</artifactId>
     <version>1.0.0</version>
 </dependency>
